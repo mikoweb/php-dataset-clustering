@@ -76,8 +76,8 @@ class ArrayDatasetRepository implements DatasetRepository
         $invoices = [];
 
         foreach ($this->dataset as $row) {
-            if ($row->customerId === $customerId && !in_array($row->invoiceDate, $invoices)) {
-                $invoices[] = $row->invoiceDate;
+            if ($row->customerId === $customerId && !in_array($row->invoiceNo, $invoices)) {
+                $invoices[] = $row->invoiceNo;
             }
         }
 

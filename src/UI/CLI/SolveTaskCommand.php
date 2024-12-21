@@ -19,7 +19,6 @@ class SolveTaskCommand extends Command
     public function __construct(
         private readonly DatasetReader $datasetReader,
         private readonly ClusteringAnalysisDatasetFactory $clusteringAnalysisDatasetFactory,
-        private readonly DatasetClusterer $datasetClusterer,
     ) {
         parent::__construct();
     }
@@ -35,9 +34,11 @@ class SolveTaskCommand extends Command
         $clusteringAnalysisDataset = $this->clusteringAnalysisDatasetFactory->create($dataset);
 
         $clustersRange = [1, 10];
+        $clusterer = new DatasetClusterer();
+
         $io->info(sprintf('Clustering for K range<%d, %d>...', $clustersRange[0], $clustersRange[1]));
-        $clusters = $this->datasetClusterer->clusterize($clusteringAnalysisDataset, $clustersRange);
-        dump($clusters[5][0]);
+        $clusterer->clusterize($clusteringAnalysisDataset, $clustersRange);
+        dump($clusterer->getInertia());
 
         $io->success('OK');
 

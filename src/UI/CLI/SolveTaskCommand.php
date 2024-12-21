@@ -3,6 +3,7 @@
 namespace App\UI\CLI;
 
 use App\Infrastructure\Reader\DatasetReader;
+use App\Infrastructure\Repository\ArrayDatasetRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,7 +26,9 @@ class SolveTaskCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $dataset = $this->datasetReader->read();
-        dump($dataset->count());
+        $repository = new ArrayDatasetRepository($dataset);
+
+        // TODO
 
         $io->success('OK');
 

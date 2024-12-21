@@ -9,6 +9,7 @@
         "ext-iconv": "*",
         "doctrine/collections": "^2.2",
         "league/csv": "^9.20",
+        "rubix/ml": "^2.5",
         "symfony/console": "7.1.*",
         "symfony/dotenv": "7.1.*",
         "symfony/flex": "^2",

@@ -3,6 +3,7 @@
 namespace App\UI\CLI;
 
 use App\Application\Analytics\ClusteringAnalysisDatasetFactory;
+use App\Application\ML\DatasetClusterer;
 use App\Infrastructure\Reader\DatasetReader;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -18,6 +19,7 @@ class SolveTaskCommand extends Command
     public function __construct(
         private readonly DatasetReader $datasetReader,
         private readonly ClusteringAnalysisDatasetFactory $clusteringAnalysisDatasetFactory,
+        private readonly DatasetClusterer $datasetClusterer,
     ) {
         parent::__construct();
     }
@@ -32,7 +34,10 @@ class SolveTaskCommand extends Command
         $io->info('Clustering analysis dataset creation...');
         $clusteringAnalysisDataset = $this->clusteringAnalysisDatasetFactory->create($dataset);
 
-        dump($clusteringAnalysisDataset);
+        $clustersRange = [1, 10];
+        $io->info(sprintf('Clustering for K range<%d, %d>...', $clustersRange[0], $clustersRange[1]));
+        $clusters = $this->datasetClusterer->clusterize($clusteringAnalysisDataset, $clustersRange);
+        dump($clusters[5][0]);
 
         $io->success('OK');
 

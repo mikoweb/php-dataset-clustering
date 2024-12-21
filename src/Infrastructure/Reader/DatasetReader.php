@@ -4,12 +4,12 @@ namespace App\Infrastructure\Reader;
 
 use App\Application\Cache\DatasetCacheInterface;
 use App\Application\Path\AppPathResolver;
-use App\Module\Analytics\Application\Interaction\Query\GetSentimentScoreDistribution\GetSentimentScoreDistributionQuery;
-use App\Module\Analytics\Application\Math\SentimentScoreThreshold;
 use App\UI\Dto\DatasetRowDto;
 use Doctrine\Common\Collections\ArrayCollection;
 use League\Csv\Reader;
 use DateTimeImmutable;
+
+use function Symfony\Component\String\u;
 
 readonly class DatasetReader
 {
@@ -37,8 +37,12 @@ readonly class DatasetReader
                 $rows = new ArrayCollection();
 
                 foreach ($data as $index => $row) {
-                    $rows->add($this->createDto($index, $row));
+                    if (!empty($row['CustomerID']) && $row['Quantity'] > 0 && $row['UnitPrice'] > 0.0) {
+                        $rows->add($this->createDto($index, $row));
+                    }
                 }
+
+                $this->removeDuplicates($rows);
 
                 return $rows;
             }
@@ -48,7 +52,7 @@ readonly class DatasetReader
     /**
      * @param array<string, string> $data
      */
-    public function createDto(int $index, array $data): DatasetRowDto
+    private function createDto(int $index, array $data): DatasetRowDto
     {
         return new DatasetRowDto(
             index: $index,
@@ -61,5 +65,45 @@ readonly class DatasetReader
             customerId: $data['CustomerID'],
             country: $data['Country'],
         );
+    }
+
+    /**
+     * @param ArrayCollection<int, DatasetRowDto> $dataset
+     */
+    private function removeDuplicates(ArrayCollection $dataset): void
+    {
+        /** @var array<string, int[]> $rowContent */
+        $rowContent = [];
+
+        foreach ($dataset as $index => $row) {
+            $content = u()
+                ->append($row->customerId)
+                ->append('_')
+                ->append($row->invoiceNo)
+                ->append('_')
+                ->append($row->stockCode)
+                ->append('_')
+                ->append((string) $row->quantity)
+                ->append('_')
+                ->append($row->invoiceDate->format('Y-m-d H:i'))
+                ->append('_')
+                ->append((string) $row->unitPrice)
+                ->append('_')
+                ->toString();
+
+            if (isset($rowContent[$content])) {
+                $rowContent[$content][] = $index;
+            } else {
+                $rowContent[$content] = [$index];
+            }
+        }
+
+        foreach ($rowContent as $indexes) {
+            if (count($indexes) > 1) {
+                foreach (array_slice($indexes, 1) as $index) {
+                    $dataset->remove($index);
+                }
+            }
+        }
     }
 }

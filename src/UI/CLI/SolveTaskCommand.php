@@ -25,7 +25,7 @@ class SolveTaskCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $dataset = $this->datasetReader->read();
-        dump($dataset->get(0));
+        dump($dataset->count());
 
         $io->success('OK');
 

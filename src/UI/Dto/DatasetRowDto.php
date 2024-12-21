@@ -16,6 +16,7 @@ readonly class DatasetRowDto
         public float $unitPrice,
         public string $customerId,
         public string $country,
+        public float $totalPurchase,
     ) {
     }
 }

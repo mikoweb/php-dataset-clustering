@@ -54,16 +54,20 @@ readonly class DatasetReader
      */
     private function createDto(int $index, array $data): DatasetRowDto
     {
+        $quantity = (int) $data['Quantity'];
+        $unitPrice = (float) str_replace(',', '.', $data['UnitPrice']);
+
         return new DatasetRowDto(
             index: $index,
             invoiceNo: $data['InvoiceNo'],
             stockCode: $data['StockCode'],
             description: $data['Description'],
-            quantity: (int) $data['Quantity'],
+            quantity: $quantity,
             invoiceDate: DateTimeImmutable::createFromFormat('Y-m-d H:i', $data['InvoiceDate']),
-            unitPrice: (float) str_replace(',', '.', $data['UnitPrice']),
+            unitPrice: $unitPrice,
             customerId: $data['CustomerID'],
             country: $data['Country'],
+            totalPurchase: $quantity * $unitPrice,
         );
     }
 

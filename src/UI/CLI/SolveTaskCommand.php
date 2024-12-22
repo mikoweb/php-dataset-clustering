@@ -2,11 +2,17 @@
 
 namespace App\UI\CLI;
 
+use App\Application\Analytics\ClusteredCustomersFactory;
 use App\Application\Analytics\ClusteringAnalysisDatasetFactory;
 use App\Application\Analytics\FeaturesMeanCalculator;
 use App\Application\ML\DatasetClusterer;
 use App\Application\ML\ElbowPoint;
+use App\Application\Path\AppPathResolver;
 use App\Infrastructure\Reader\DatasetReader;
+use League\Csv\CannotInsertRecord;
+use League\Csv\Exception;
+use League\Csv\UnavailableStream;
+use League\Csv\Writer;
 use MathPHP\Exception\BadDataException;
 use noximo\PHPColoredAsciiLinechart\Colorizers\AsciiColorizer;
 use noximo\PHPColoredAsciiLinechart\Linechart;
@@ -25,12 +31,16 @@ class SolveTaskCommand extends Command
     public function __construct(
         private readonly DatasetReader $datasetReader,
         private readonly ClusteringAnalysisDatasetFactory $clusteringAnalysisDatasetFactory,
+        private readonly AppPathResolver $appPathResolver,
     ) {
         parent::__construct();
     }
 
     /**
      * @throws BadDataException
+     * @throws UnavailableStream
+     * @throws CannotInsertRecord
+     * @throws Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -66,7 +76,20 @@ class SolveTaskCommand extends Command
         $io->writeln('');
         $io->writeln('');
 
-        $io->success('OK');
+        $clusteredCustomersFilename = $this->appPathResolver->getResourcesPath('clustered_customers.csv');
+        $clusteredCustomers =  json_decode(json_encode(ClusteredCustomersFactory::create(
+            $clusteringAnalysisDataset,
+            $clusterer->getResults()[$elbowPoint],
+        )), true);
+
+        $writer = Writer::createFromPath($clusteredCustomersFilename, 'w+');
+        $writer->insertOne(array_keys($clusteredCustomers[0]));
+
+        foreach ($clusteredCustomers as $clusteredCustomer) {
+            $writer->insertOne(array_values($clusteredCustomer));
+        }
+
+        $io->success(sprintf('Clustered customers file: %s', $clusteredCustomersFilename));
 
         return Command::SUCCESS;
     }
@@ -76,7 +99,6 @@ class SolveTaskCommand extends Command
      */
     private function printChartElbowMethod(int $elbowPoint, array $inertia): void
     {
-
         $settings = (new Settings())
             ->setHeight(60)
             ->setDecimals(0)

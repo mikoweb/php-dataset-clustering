@@ -1,5 +1,6 @@
 .idea
 composer.phar
+resources/clustered_customers.csv
 
 ###> symfony/framework-bundle ###
 /.env.local

@@ -3,6 +3,7 @@
 namespace App\Application\ML;
 
 use App\UI\Dto\ClusteringAnalysisDto;
+use MathPHP\Exception\BadDataException;
 use MathPHP\Statistics\Distance;
 use Rubix\ML\Clusterers\KMeans;
 use Rubix\ML\Datasets\Dataset;
@@ -29,6 +30,8 @@ class DatasetClusterer
      * @param array<int<0, 1>, int>   $clustersRange
      *
      * @return array<int, ClusteringResult[]>
+     *
+     * @throws BadDataException
      */
     public function clusterize(array $arrayDataset, array $clustersRange): array
     {
@@ -92,6 +95,9 @@ class DatasetClusterer
         $dataset->apply(new ZScaleStandardizer(true));
     }
 
+    /**
+     * @throws BadDataException
+     */
     private function calculateInertia(): void
     {
         $this->inertia = [];

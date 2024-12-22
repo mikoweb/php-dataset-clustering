@@ -3,9 +3,11 @@
 namespace App\UI\CLI;
 
 use App\Application\Analytics\ClusteringAnalysisDatasetFactory;
+use App\Application\Analytics\FeaturesMeanCalculator;
 use App\Application\ML\DatasetClusterer;
 use App\Application\ML\ElbowPoint;
 use App\Infrastructure\Reader\DatasetReader;
+use MathPHP\Exception\BadDataException;
 use noximo\PHPColoredAsciiLinechart\Colorizers\AsciiColorizer;
 use noximo\PHPColoredAsciiLinechart\Linechart;
 use noximo\PHPColoredAsciiLinechart\Settings;
@@ -27,6 +29,9 @@ class SolveTaskCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * @throws BadDataException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -54,6 +59,13 @@ class SolveTaskCommand extends Command
         $io->writeln('');
         $io->success(sprintf('Optimal k: %d', $elbowPoint));
 
+        $calculator = new FeaturesMeanCalculator();
+
+        $io->info('Features mean:');
+        dump($calculator->calculate($clusteringAnalysisDataset, $clusterer->getResults()[$elbowPoint]));
+        $io->writeln('');
+        $io->writeln('');
+
         $io->success('OK');
 
         return Command::SUCCESS;
@@ -78,7 +90,7 @@ class SolveTaskCommand extends Command
         }
 
         $linechart->addPoint(
-            round($inertia[$elbowPoint] / 100),
+            (int) round($inertia[$elbowPoint] / 100),
             $elbowPoint,
             [AsciiColorizer::RED],
             Linechart::CROSS,

@@ -44,8 +44,26 @@ class SolveTaskCommand extends Command
         $clusterer->clusterize($clusteringAnalysisDataset, $clustersRange);
 
         $io->info('Printing inertia value...');
-        dump($clusterer->getInertia());
         $elbowPoint = ElbowPoint::find(array_values($clusterer->getInertia()));
+        $inertia = $clusterer->getInertia();
+
+        dump($inertia);
+        $io->writeln('');
+        $this->printChartElbowMethod($elbowPoint, $inertia);
+
+        $io->writeln('');
+        $io->success(sprintf('Optimal k: %d', $elbowPoint));
+
+        $io->success('OK');
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * @param array<int, float> $inertia
+     */
+    private function printChartElbowMethod(int $elbowPoint, array $inertia): void
+    {
 
         $settings = (new Settings())
             ->setHeight(60)
@@ -55,21 +73,17 @@ class SolveTaskCommand extends Command
         $linechart = new Linechart();
         $linechart->setSettings($settings);
 
-        foreach ($clusterer->getInertia() as $k => $inertia) {
-            $linechart->addPoint((int) round($inertia / 100), (int) $k);
+        foreach ($inertia as $k => $value) {
+            $linechart->addPoint((int) round($value / 100), $k);
         }
 
         $linechart->addPoint(
-            round($clusterer->getInertia()[$elbowPoint] / 100),
+            round($inertia[$elbowPoint] / 100),
             $elbowPoint,
             [AsciiColorizer::RED],
             Linechart::CROSS,
         );
 
         $linechart->chart()->print();
-
-        $io->success('OK');
-
-        return Command::SUCCESS;
     }
 }
